@@ -1,28 +1,25 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinary');
 const Project = require('../models/Project');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// Multer config for image uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, '..', 'uploads')),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`);
+// Multer config — Cloudinary storage
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'portfolio',
+    allowed_formats: ['jpeg', 'jpg', 'png', 'gif', 'webp', 'svg'],
+    transformation: [{ quality: 'auto', fetch_format: 'auto' }],
   },
 });
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
-  fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|gif|webp|svg/;
-    const ok = allowed.test(path.extname(file.originalname).toLowerCase()) && allowed.test(file.mimetype.split('/')[1]);
-    cb(ok ? null : new Error('Only image files are allowed'), ok);
-  },
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
 });
 
 // ──── PUBLIC ROUTES ────
@@ -57,7 +54,7 @@ router.post('/', auth, upload.array('images', 10), async (req, res) => {
   try {
     const data = { ...req.body };
     if (req.files && req.files.length > 0) {
-      data.images = req.files.map((f) => `/uploads/${f.filename}`);
+      data.images = req.files.map((f) => f.path); // Cloudinary secure URL
     }
     // Parse tags if sent as comma-separated string
     if (typeof data.tags === 'string') {
@@ -79,7 +76,7 @@ router.put('/:id', auth, upload.array('images', 10), async (req, res) => {
       const kept = data.existingImages
         ? (typeof data.existingImages === 'string' ? JSON.parse(data.existingImages) : data.existingImages)
         : [];
-      data.images = [...kept, ...req.files.map((f) => `/uploads/${f.filename}`)];
+      data.images = [...kept, ...req.files.map((f) => f.path)]; // Cloudinary secure URL
     } else if (data.existingImages) {
       data.images = typeof data.existingImages === 'string' ? JSON.parse(data.existingImages) : data.existingImages;
     }
@@ -98,11 +95,29 @@ router.put('/:id', auth, upload.array('images', 10), async (req, res) => {
   }
 });
 
-// DELETE /api/projects/:id — delete project
+// DELETE /api/projects/:id — delete project + its Cloudinary images
 router.delete('/:id', auth, async (req, res) => {
   try {
     const project = await Project.findByIdAndDelete(req.params.id);
     if (!project) return res.status(404).json({ error: 'Project not found' });
+
+    // Clean up Cloudinary images (best-effort, non-blocking)
+    if (project.images && project.images.length > 0) {
+      const publicIds = project.images
+        .filter((url) => url && url.includes('cloudinary.com'))
+        .map((url) => {
+          const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/);
+          return match ? match[1] : null;
+        })
+        .filter(Boolean);
+
+      if (publicIds.length > 0) {
+        cloudinary.api.delete_resources(publicIds).catch((err) =>
+          console.warn('Cloudinary cleanup warning:', err.message)
+        );
+      }
+    }
+
     res.json({ message: 'Project deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
