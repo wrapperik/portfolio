@@ -1,0 +1,322 @@
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import api from '../api';
+
+const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001';
+
+function resolveImg(src) {
+  if (!src) return '';
+  return src.startsWith('http') ? src : `${API_BASE}${src}`;
+}
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+};
+
+export default function ProjectPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [project, setProject] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeImg, setActiveImg] = useState(0);
+  const [lightbox, setLightbox] = useState(false);
+
+  useEffect(() => {
+    api
+      .get(`/projects/${id}`)
+      .then(({ data }) => setProject(data))
+      .catch(() => navigate('/'))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-off-white flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-charcoal/20 border-t-charcoal rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!project) return null;
+
+  const color = project.tag === 'UX' ? 'bg-amber' : 'bg-charcoal';
+  const categoryLabel = project.tag === 'UX' ? 'UX Design' : 'Development';
+  const images = project.images?.length ? project.images : [];
+
+  return (
+    <>
+      <div className="min-h-screen bg-off-white">
+        {/* Top bar */}
+        <header className="sticky top-0 z-40 bg-off-white/80 backdrop-blur-md border-b border-gray-light/50">
+          <div className="max-w-6xl mx-auto px-6 sm:px-10 h-16 flex items-center justify-between">
+            <button
+              onClick={() => navigate('/#projects')}
+              className="flex items-center gap-2 text-sm font-medium text-gray-warm hover:text-charcoal transition-colors group"
+            >
+              <svg
+                className="w-5 h-5 transition-transform group-hover:-translate-x-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Projects
+            </button>
+
+            {project.link && (
+              <a
+                href={project.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm font-medium bg-charcoal text-cream px-5 py-2 rounded-full hover:bg-amber hover:text-charcoal transition-colors"
+              >
+                View Live
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H7M17 7v10" />
+                </svg>
+              </a>
+            )}
+          </div>
+        </header>
+
+        <div className="max-w-6xl mx-auto px-6 sm:px-10 py-12 lg:py-20">
+          {/* Hero section */}
+          <motion.div variants={fadeUp} initial="hidden" animate="visible" className="mb-12">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <span
+                className={`text-xs font-medium px-3 py-1 rounded-full ${
+                  project.tag === 'UX' ? 'bg-amber/20 text-amber' : 'bg-charcoal/10 text-charcoal'
+                }`}
+              >
+                {categoryLabel}
+              </span>
+              <span className="text-xs text-gray-warm">{project.year}</span>
+            </div>
+            <h1 className="text-4xl lg:text-6xl font-black text-charcoal leading-tight mb-6">
+              {project.title}
+            </h1>
+            {project.tags?.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {project.tags.map((t) => (
+                  <span
+                    key={t}
+                    className="text-xs font-medium text-charcoal/70 border border-gray-light px-3 py-1.5 rounded-full"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
+          </motion.div>
+
+          {/* Image gallery */}
+          {images.length > 0 && (
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="mb-16"
+            >
+              {/* Main image */}
+              <div
+                className={`aspect-[16/9] ${color} rounded-2xl overflow-hidden relative cursor-zoom-in mb-4`}
+                onClick={() => setLightbox(true)}
+              >
+                <img
+                  src={resolveImg(images[activeImg])}
+                  alt={`${project.title} — image ${activeImg + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Thumbnails */}
+              {images.length > 1 && (
+                <div className="flex gap-3 overflow-x-auto pb-2">
+                  {images.map((img, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveImg(i)}
+                      className={`w-20 h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all duration-200 ${
+                        i === activeImg
+                          ? 'border-amber scale-105'
+                          : 'border-transparent opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={resolveImg(img)} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* Content */}
+          <div className="grid lg:grid-cols-3 gap-12 lg:gap-16">
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="lg:col-span-2"
+            >
+              <h2 className="text-2xl font-bold text-charcoal mb-4">About this project</h2>
+              <p className="text-gray-warm leading-relaxed whitespace-pre-line text-base">
+                {project.description}
+              </p>
+
+              {project.rationale && (
+                <>
+                  <h2 className="text-2xl font-bold text-charcoal mt-12 mb-4">
+                    Rationale &amp; Process
+                  </h2>
+                  <p className="text-gray-warm leading-relaxed whitespace-pre-line text-base">
+                    {project.rationale}
+                  </p>
+                </>
+              )}
+            </motion.div>
+
+            {/* Sidebar */}
+            <motion.aside
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="flex flex-col gap-6"
+            >
+              <div className="bg-cream rounded-2xl p-6 border border-gray-light">
+                <h3 className="text-sm font-bold text-charcoal uppercase tracking-wider mb-4">
+                  Details
+                </h3>
+                <dl className="flex flex-col gap-3 text-sm">
+                  <div>
+                    <dt className="text-gray-warm">Category</dt>
+                    <dd className="font-medium text-charcoal">{categoryLabel}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-gray-warm">Year</dt>
+                    <dd className="font-medium text-charcoal">{project.year}</dd>
+                  </div>
+                  {project.link && (
+                    <div>
+                      <dt className="text-gray-warm">Link</dt>
+                      <dd>
+                        <a
+                          href={project.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-amber hover:underline break-all"
+                        >
+                          {project.link}
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+
+              {project.tags?.length > 0 && (
+                <div className="bg-cream rounded-2xl p-6 border border-gray-light">
+                  <h3 className="text-sm font-bold text-charcoal uppercase tracking-wider mb-4">
+                    Technologies
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {project.tags.map((t) => (
+                      <span
+                        key={t}
+                        className="text-xs font-medium text-charcoal/70 bg-off-white px-3 py-1.5 rounded-full"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </motion.aside>
+          </div>
+        </div>
+      </div>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightbox && images.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-charcoal/90 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setLightbox(false)}
+          >
+            {/* Close */}
+            <button
+              onClick={() => setLightbox(false)}
+              className="absolute top-6 right-6 w-10 h-10 bg-cream/10 hover:bg-cream/20 rounded-full flex items-center justify-center transition-colors"
+            >
+              <svg className="w-5 h-5 text-cream" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Prev / Next */}
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveImg((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+                  }}
+                  className="absolute left-4 sm:left-8 w-10 h-10 bg-cream/10 hover:bg-cream/20 rounded-full flex items-center justify-center transition-colors"
+                >
+                  <svg className="w-5 h-5 text-cream" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveImg((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+                  }}
+                  className="absolute right-4 sm:right-8 w-10 h-10 bg-cream/10 hover:bg-cream/20 rounded-full flex items-center justify-center transition-colors"
+                >
+                  <svg className="w-5 h-5 text-cream" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
+
+            <motion.img
+              key={activeImg}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              src={resolveImg(images[activeImg])}
+              alt={`${project.title} — image ${activeImg + 1}`}
+              className="max-w-full max-h-[85vh] object-contain rounded-xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+
+            {/* Dots */}
+            {images.length > 1 && (
+              <div className="absolute bottom-6 flex gap-2">
+                {images.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveImg(i);
+                    }}
+                    className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                      i === activeImg ? 'bg-cream' : 'bg-cream/30'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
