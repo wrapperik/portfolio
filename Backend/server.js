@@ -2,15 +2,28 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
 
 const app = express();
 
+const corsOptions = {
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+};
+
 // ──── Middleware ────
-app.use(cors());
+app.use(cors(corsOptions));
+app.options('/{*path}', cors(corsOptions)); // Handle preflight for all routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -31,15 +44,15 @@ app.use((err, req, res, next) => {
 });
 
 // ──── Connect to MongoDB & start server ────
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
+
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('✅ Connected to MongoDB');
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   })
   .catch((err) => {
     console.error('❌ MongoDB connection error:', err.message);
-    process.exit(1);
   });
