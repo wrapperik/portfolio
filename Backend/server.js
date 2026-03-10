@@ -15,7 +15,7 @@ const projectRoutes = require('./routes/projects');
 const app = express();
 
 const corsOptions = {
-  origin: 'http://localhost:5173',
+  origin: process.env.NODE_ENV === 'production' ? false : 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -36,6 +36,16 @@ app.use('/api/projects', projectRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
+// ──── Serve Frontend (production) ────
+const clientBuildPath = path.join(__dirname, '..', 'Frontend', 'dist');
+if (fs.existsSync(clientBuildPath)) {
+  app.use(express.static(clientBuildPath));
+  // SPA fallback — serve index.html for any non-API route
+  app.get('/{*path}', (req, res) => {
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  });
+}
 
 // ──── Error handler ────
 app.use((err, req, res, next) => {

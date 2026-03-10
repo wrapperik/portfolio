@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api';
 
-const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001';
+const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
 
 function resolveImg(src) {
   if (!src) return '';

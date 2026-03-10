@@ -266,7 +266,7 @@ export default function AdminDashboard() {
                   {existingImages.map((img, i) => (
                     <div key={i} className="relative group">
                       <img
-                        src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001'}${img}`}
+                        src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}${img}`}
                         alt=""
                         className="w-24 h-24 object-cover rounded-lg border border-gray-light"
                       />
@@ -334,7 +334,7 @@ export default function AdminDashboard() {
               >
                 {project.images?.length > 0 && (
                   <img
-                    src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001'}${project.images[0]}`}
+                    src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}${project.images[0]}`}
                     alt={project.title}
                     className="w-20 h-20 object-cover rounded-lg shrink-0"
                   />

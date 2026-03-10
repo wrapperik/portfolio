@@ -178,7 +178,7 @@ export default function Projects() {
                         src={
                           thumbnail.startsWith('http')
                             ? thumbnail
-                            : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001'}${thumbnail}`
+                            : `${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}${thumbnail}`
                         }
                         alt={project.title}
                         className="absolute inset-0 w-full h-full object-cover"
