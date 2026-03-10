@@ -1,26 +1,29 @@
 const express = require('express');
 const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('../config/cloudinary');
 const Project = require('../models/Project');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// Multer config — Cloudinary storage
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: 'portfolio',
-    allowed_formats: ['jpeg', 'jpg', 'png', 'gif', 'webp', 'svg'],
-    transformation: [{ quality: 'auto', fetch_format: 'auto' }],
-  },
-});
-
+// Multer — memory storage, Cloudinary handles persistence
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
 });
+
+// Helper: upload a buffer to Cloudinary and return the secure URL
+const uploadToCloudinary = (buffer, mimetype) =>
+  new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'portfolio', resource_type: 'image' },
+      (err, result) => {
+        if (err) return reject(err);
+        resolve(result.secure_url);
+      }
+    );
+    stream.end(buffer);
+  });
 
 // ──── PUBLIC ROUTES ────
 
@@ -54,7 +57,9 @@ router.post('/', auth, upload.array('images', 10), async (req, res) => {
   try {
     const data = { ...req.body };
     if (req.files && req.files.length > 0) {
-      data.images = req.files.map((f) => f.path); // Cloudinary secure URL
+      data.images = await Promise.all(
+        req.files.map((f) => uploadToCloudinary(f.buffer, f.mimetype))
+      );
     }
     // Parse tags if sent as comma-separated string
     if (typeof data.tags === 'string') {
@@ -72,11 +77,13 @@ router.put('/:id', auth, upload.array('images', 10), async (req, res) => {
   try {
     const data = { ...req.body };
     if (req.files && req.files.length > 0) {
-      // Merge with existing images kept by the client
       const kept = data.existingImages
         ? (typeof data.existingImages === 'string' ? JSON.parse(data.existingImages) : data.existingImages)
         : [];
-      data.images = [...kept, ...req.files.map((f) => f.path)]; // Cloudinary secure URL
+      const newUrls = await Promise.all(
+        req.files.map((f) => uploadToCloudinary(f.buffer, f.mimetype))
+      );
+      data.images = [...kept, ...newUrls]; // Cloudinary secure URL
     } else if (data.existingImages) {
       data.images = typeof data.existingImages === 'string' ? JSON.parse(data.existingImages) : data.existingImages;
     }
