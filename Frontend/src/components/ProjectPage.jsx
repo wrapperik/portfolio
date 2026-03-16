@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api';
@@ -22,6 +22,23 @@ export default function ProjectPage() {
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
   const [lightbox, setLightbox] = useState(false);
+  const scrollRef = useRef(null);
+  const [canScroll, setCanScroll] = useState(false);
+  const [atBottom, setAtBottom] = useState(false);
+
+  const handleImageLoad = useCallback(() => {
+    requestAnimationFrame(() => {
+      const el = scrollRef.current;
+      if (el) {
+        setCanScroll(el.scrollHeight > el.clientHeight + 10);
+      }
+    });
+  }, []);
+
+  const handleScroll = useCallback((e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    setAtBottom(scrollTop + clientHeight >= scrollHeight - 20);
+  }, []);
 
   useEffect(() => {
     api
@@ -30,6 +47,36 @@ export default function ProjectPage() {
       .catch(() => navigate('/'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  // Reset scroll position when switching images
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+    setCanScroll(false);
+    setAtBottom(false);
+  }, [activeImg]);
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (!lightbox || !project) return;
+    const imgs = project.images?.length ? project.images : [];
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setLightbox(false);
+      if (imgs.length > 1) {
+        if (e.key === 'ArrowLeft') setActiveImg((prev) => (prev === 0 ? imgs.length - 1 : prev - 1));
+        if (e.key === 'ArrowRight') setActiveImg((prev) => (prev === imgs.length - 1 ? 0 : prev + 1));
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [lightbox, project]);
+
+  // Lock body scroll when lightbox is open
+  useEffect(() => {
+    document.body.style.overflow = lightbox ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [lightbox]);
 
   if (loading) {
     return (
@@ -121,15 +168,31 @@ export default function ProjectPage() {
               className="mb-16"
             >
               {/* Main image */}
-              <div
-                className={`aspect-[16/9] ${color} rounded-2xl overflow-hidden relative cursor-zoom-in mb-4`}
-                onClick={() => setLightbox(true)}
-              >
-                <img
-                  src={resolveImg(images[activeImg])}
-                  alt={`${project.title} — image ${activeImg + 1}`}
-                  className="w-full h-full object-cover"
-                />
+              <div className="relative rounded-2xl overflow-hidden mb-4 bg-charcoal/5">
+                <div
+                  ref={scrollRef}
+                  onScroll={handleScroll}
+                  className="max-h-[450px] sm:max-h-[500px] lg:max-h-[600px] overflow-y-auto overscroll-contain"
+                  style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.15) transparent' }}
+                >
+                  <img
+                    src={resolveImg(images[activeImg])}
+                    alt={`${project.title} — image ${activeImg + 1}`}
+                    className="w-full cursor-zoom-in"
+                    onClick={() => setLightbox(true)}
+                    onLoad={handleImageLoad}
+                  />
+                </div>
+                {canScroll && !atBottom && (
+                  <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-charcoal/50 to-transparent pointer-events-none flex items-end justify-center pb-3 rounded-b-2xl">
+                    <div className="flex flex-col items-center gap-0.5 text-cream/90">
+                      <span className="text-xs font-medium tracking-wide">Scroll to explore</span>
+                      <svg className="w-4 h-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Thumbnails */}
@@ -286,16 +349,21 @@ export default function ProjectPage() {
               </>
             )}
 
-            <motion.img
+            <motion.div
               key={activeImg}
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              src={resolveImg(images[activeImg])}
-              alt={`${project.title} — image ${activeImg + 1}`}
-              className="max-w-full max-h-[85vh] object-contain rounded-xl"
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="w-full max-w-4xl max-h-[85vh] overflow-y-auto rounded-xl mx-4 overscroll-contain"
+              style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}
               onClick={(e) => e.stopPropagation()}
-            />
+            >
+              <img
+                src={resolveImg(images[activeImg])}
+                alt={`${project.title} — image ${activeImg + 1}`}
+                className="w-full rounded-xl"
+              />
+            </motion.div>
 
             {/* Dots */}
             {images.length > 1 && (
