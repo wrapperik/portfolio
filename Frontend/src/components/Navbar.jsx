@@ -43,10 +43,7 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
             <a href="#home" className="flex items-center gap-1">
-              <span className="text-2xl font-black tracking-tighter text-charcoal font-serif">
-                RP
-              </span>
-              <span className="w-2 h-2 rounded-full bg-amber mt-2"></span>
+              <img src="/RP-logo.png" alt="RP Logo" className="h-8 w-auto" />
             </a>
 
             {/* Desktop Nav */}

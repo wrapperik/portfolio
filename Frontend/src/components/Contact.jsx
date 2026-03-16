@@ -65,7 +65,7 @@ export default function Contact() {
             className="flex flex-col sm:flex-row justify-center gap-6 mb-10"
           >
             <a
-              href="mailto:hello@rikuspretorius.com"
+              href="mailto:rikonly94@gmail.com"
               className="flex items-center justify-center gap-3 px-8 py-4 bg-amber text-charcoal font-bold rounded-full hover:bg-amber/90 transition-colors duration-300 group"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -76,7 +76,7 @@ export default function Contact() {
                   d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                 />
               </svg>
-              hello@rikuspretorius.com
+              rikonly94@gmail.com
             </a>
           </motion.div>
 
