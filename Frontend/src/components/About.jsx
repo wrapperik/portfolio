@@ -40,17 +40,11 @@ export default function About() {
             className="relative"
           >
             <div className="aspect-square bg-off-white rounded-[2rem] overflow-hidden relative border border-gray-light">
-              <div className="absolute inset-0 flex items-center justify-center p-12">
-                <div className="w-full h-full rounded-2xl bg-gradient-to-br from-amber/20 via-amber/10 to-transparent flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-amber/20 flex items-center justify-center">
-                      <span className="text-4xl font-serif font-bold text-amber">R</span>
-                    </div>
-                    <p className="font-serif italic text-xl text-charcoal">Rikus Pretorius</p>
-                    <p className="text-sm text-gray-warm mt-2">UX Designer & Front-End Developer</p>
-                  </div>
-                </div>
-              </div>
+              <img
+                src="https://res.cloudinary.com/dir5vkg3u/image/upload/v1773693501/e8ef9960-8d04-45a2-84d3-ea39c374682f_nak5um.jpg"
+                alt="Rikus Pretorius"
+                className="w-full h-full object-cover"
+              />
             </div>
             {/* Decorative corner */}
             <div className="absolute -bottom-4 -right-4 w-24 h-24 border-2 border-amber rounded-2xl -z-10"></div>
