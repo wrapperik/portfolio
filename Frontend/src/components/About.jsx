@@ -73,10 +73,9 @@ export default function About() {
               custom={2}
               className="text-base text-gray-warm leading-relaxed"
             >
-              I'm a third-year student majoring in Interactive Development and UX Design.
-              I'm passionate about bridging the gap between design thinking and front-end
-              development — turning user research into intuitive, accessible, and beautifully
-              coded interfaces.
+              I’m a third-year student majoring in Interactive Development and UX Design. I’m passionate about bridging the gap between design thinking and front-end development, turning user research into intuitive, accessible, and well-crafted interfaces.
+
+              I believe great UX is often invisible. It guides users naturally, creates enjoyable experiences, and helps people connect with digital products without friction. Whether I’m conducting usability testing, designing information architecture, or building responsive front-end interfaces, I approach every project with empathy, curiosity, and attention to detail.
             </motion.p>
 
             <motion.p
@@ -103,7 +102,7 @@ export default function About() {
                 { label: 'Focus', value: 'UX Design & Front-End Dev' },
                 { label: 'Seeking', value: 'Internship Opportunity' },
                 { label: 'Education', value: '3rd Year — Interactive Development' },
-                { label: 'Location', value: 'South Africa' },
+                { label: 'Location', value: 'Pretoria, South Africa' },
               ].map((item) => (
                 <div key={item.label}>
                   <p className="text-xs font-medium text-amber uppercase tracking-wider">{item.label}</p>

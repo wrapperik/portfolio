@@ -58,7 +58,7 @@ const skillCategories = [
 
 const tools = [
   'Figma', 'React', 'Tailwind CSS', 'VS Code', 'Git',
-  'Miro', 'Notion', 'Node.js', 'Framer', 'Hotjar',
+  'Miro', 'Notion', 'Node.js', 'Framer', 'Notion',
 ];
 
 export default function Skills() {
@@ -90,7 +90,7 @@ export default function Skills() {
         >
           What I
           <br />
-          <span className="font-serif italic font-normal">bring to the table</span>
+          <span className="font-serif italic font-normal text-amber">bring to the table</span>
         </motion.h2>
 
         {/* Skills Grid */}
@@ -102,7 +102,7 @@ export default function Skills() {
               initial="hidden"
               animate={isInView ? 'visible' : 'hidden'}
               custom={catIndex + 2}
-              className="bg-off-white rounded-2xl p-8 border border-gray-light hover:border-amber/30 transition-colors duration-500"
+              className="bg-white rounded-2xl p-8 border border-gray-light hover:border-amber/30 transition-colors duration-500"
             >
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-10 h-10 bg-amber/10 rounded-xl flex items-center justify-center text-amber">
@@ -123,7 +123,7 @@ export default function Skills() {
                         initial={{ width: 0 }}
                         animate={isInView ? { width: `${skill.level}%` } : { width: 0 }}
                         transition={{ duration: 1.2, delay: catIndex * 0.2 + 0.5, ease: [0.22, 1, 0.36, 1] }}
-                        className="h-full bg-gradient-to-r from-amber to-amber-light rounded-full"
+                        className="h-full bg-gradient-to-r from-orange to-amber-light rounded-full"
                       />
                     </div>
                   </div>

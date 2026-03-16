@@ -10,7 +10,7 @@ const fadeUp = {
 };
 
 const stats = [
-  { number: '10+', label: 'UX & development projects built from research to code' },
+  { number: '5+', label: 'UX & development projects built from research to code' },
   { number: '3rd', label: 'Year studying Interactive Development & UX Design' },
 ];
 

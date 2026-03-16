@@ -121,7 +121,7 @@ export default function Projects() {
           >
             Featured
             <br />
-            <span className="font-serif italic font-normal">projects</span>
+            <span className="font-serif italic font-normal text-amber">projects</span>
           </motion.h2>
 
           {/* Filters */}
