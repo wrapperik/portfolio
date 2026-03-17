@@ -222,7 +222,7 @@ export default function Projects() {
                     {/* Year badge */}
                     <div className="absolute top-4 right-4">
                       <span
-                        className={`text-xs font-medium px-3 py-1 rounded-full ${color === 'bg-charcoal' ? 'bg-cream/20 text-cream' : 'bg-charcoal/10 text-charcoal'}`}
+                        className={`text-xs font-medium px-3 py-1 rounded-full backdrop-blur-md ${color === 'bg-charcoal' ? 'bg-cream/20 text-cream' : 'bg-charcoal/10 text-white'}`}
                       >
                         {project.year}
                       </span>

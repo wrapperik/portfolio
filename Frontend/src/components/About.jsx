@@ -78,17 +78,6 @@ export default function About() {
               I believe great UX is often invisible. It guides users naturally, creates enjoyable experiences, and helps people connect with digital products without friction. Whether I’m conducting usability testing, designing information architecture, or building responsive front-end interfaces, I approach every project with empathy, curiosity, and attention to detail.
             </motion.p>
 
-            <motion.p
-              variants={fadeUp}
-              initial="hidden"
-              animate={isInView ? 'visible' : 'hidden'}
-              custom={3}
-              className="text-base text-gray-warm leading-relaxed"
-            >
-              I believe great UX is invisible — it guides, delights, and connects. Whether
-              it's conducting usability testing, designing information architectures, or building
-              responsive front-end interfaces, I approach every project with empathy and precision.
-            </motion.p>
 
             {/* Key details */}
             <motion.div
@@ -101,7 +90,7 @@ export default function About() {
               {[
                 { label: 'Focus', value: 'UX Design & Front-End Dev' },
                 { label: 'Seeking', value: 'Internship Opportunity' },
-                { label: 'Education', value: '3rd Year — Interactive Development' },
+                { label: 'Education', value: '3rd Year — Creative Technologies' },
                 { label: 'Location', value: 'Pretoria, South Africa' },
               ].map((item) => (
                 <div key={item.label}>
