@@ -36,6 +36,23 @@ const projectSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    pdfs: {
+      type: [
+        {
+          url: { type: String, required: true },
+          originalName: { type: String, default: 'document.pdf' },
+        },
+      ],
+      default: [],
+    },
+    youtubeLink: {
+      url: { type: String, default: '' },
+      title: { type: String, default: '' },
+    },
+    prototypeEmbed: {
+      type: String,
+      default: '',
+    },
     order: {
       type: Number,
       default: 0,

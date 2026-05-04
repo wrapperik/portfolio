@@ -10,6 +10,32 @@ function resolveImg(src) {
   return src.startsWith('http') ? src : `${API_BASE}${src}`;
 }
 
+/**
+ * Extract a YouTube embed ID from various URL formats.
+ * Supports youtube.com/watch?v=, youtu.be/, youtube.com/embed/, etc.
+ */
+function getYouTubeEmbedUrl(url) {
+  if (!url) return null;
+  let videoId = null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.includes('youtu.be')) {
+      videoId = parsed.pathname.slice(1);
+    } else if (parsed.hostname.includes('youtube.com')) {
+      if (parsed.pathname.startsWith('/embed/')) {
+        videoId = parsed.pathname.split('/embed/')[1];
+      } else {
+        videoId = parsed.searchParams.get('v');
+      }
+    }
+  } catch {
+    // Try regex fallback
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([a-zA-Z0-9_-]{11})/);
+    if (match) videoId = match[1];
+  }
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+}
+
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
@@ -91,6 +117,7 @@ export default function ProjectPage() {
   const color = project.tag === 'UX' ? 'bg-amber' : 'bg-charcoal';
   const categoryLabel = project.tag === 'UX' ? 'UX Design' : 'Development';
   const images = project.images?.length ? project.images : [];
+  const youtubeEmbedUrl = getYouTubeEmbedUrl(project.youtubeLink?.url);
 
   return (
     <>
@@ -296,8 +323,96 @@ export default function ProjectPage() {
                   </div>
                 </div>
               )}
+
+              {/* PDF Downloads */}
+              {project.pdfs?.length > 0 && (
+                <div className="bg-cream rounded-2xl p-6 border border-gray-light">
+                  <h3 className="text-sm font-bold text-charcoal uppercase tracking-wider mb-4">
+                    Documents
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    {project.pdfs.map((pdf, i) => (
+                      <a
+                        key={i}
+                        href={pdf.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 bg-off-white rounded-xl px-4 py-3 border border-gray-light hover:border-amber hover:bg-amber/5 transition-colors group"
+                      >
+                        <svg
+                          className="w-6 h-6 text-red-500 shrink-0"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
+                        </svg>
+                        <span className="text-sm font-medium text-charcoal truncate flex-1">
+                          {pdf.originalName}
+                        </span>
+                        <svg
+                          className="w-4 h-4 text-gray-warm group-hover:text-amber transition-colors shrink-0"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.aside>
           </div>
+
+          {/* ──── YouTube Video ──── */}
+          {youtubeEmbedUrl && (
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="mt-16"
+            >
+              {project.youtubeLink?.title && (
+                <h2 className="text-2xl font-bold text-charcoal mb-6">
+                  {project.youtubeLink.title}
+                </h2>
+              )}
+              <div
+                className="relative w-full rounded-2xl overflow-hidden border border-gray-light bg-charcoal/5"
+                style={{ paddingBottom: '56.25%' }}
+              >
+                <iframe
+                  src={youtubeEmbedUrl}
+                  title={project.youtubeLink?.title || 'YouTube video'}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute inset-0 w-full h-full"
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {/* ──── Prototype Embed ──── */}
+          {project.prototypeEmbed && (
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="mt-16"
+            >
+              <h2 className="text-2xl font-bold text-charcoal mb-6">Interactive Prototype</h2>
+              <div
+                className="w-full rounded-2xl overflow-hidden border border-gray-light bg-charcoal/5"
+                dangerouslySetInnerHTML={{ __html: project.prototypeEmbed }}
+              />
+            </motion.div>
+          )}
         </div>
       </div>
 

@@ -17,9 +17,14 @@ export default function AdminDashboard() {
     tags: '',
     year: new Date().getFullYear().toString(),
     order: 0,
+    youtubeUrl: '',
+    youtubeTitle: '',
+    prototypeEmbed: '',
   });
   const [imageFiles, setImageFiles] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
+  const [pdfFiles, setPdfFiles] = useState([]);
+  const [existingPdfs, setExistingPdfs] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -59,9 +64,14 @@ export default function AdminDashboard() {
       tags: '',
       year: new Date().getFullYear().toString(),
       order: 0,
+      youtubeUrl: '',
+      youtubeTitle: '',
+      prototypeEmbed: '',
     });
     setImageFiles([]);
     setExistingImages([]);
+    setPdfFiles([]);
+    setExistingPdfs([]);
     setEditing(null);
     setShowForm(false);
     setError('');
@@ -73,10 +83,28 @@ export default function AdminDashboard() {
     setSuccess('');
 
     const formData = new FormData();
-    Object.entries(form).forEach(([key, val]) => formData.append(key, val));
+    // Append basic fields
+    const { youtubeUrl, youtubeTitle, prototypeEmbed, ...basicFields } = form;
+    Object.entries(basicFields).forEach(([key, val]) => formData.append(key, val));
+
+    // Append YouTube link as JSON
+    formData.append(
+      'youtubeLink',
+      JSON.stringify({ url: youtubeUrl, title: youtubeTitle })
+    );
+
+    // Append prototype embed code
+    formData.append('prototypeEmbed', prototypeEmbed);
+
+    // Append image files
     imageFiles.forEach((file) => formData.append('images', file));
+
+    // Append PDF files
+    pdfFiles.forEach((file) => formData.append('pdfFiles', file));
+
     if (editing) {
       formData.append('existingImages', JSON.stringify(existingImages));
+      formData.append('existingPdfs', JSON.stringify(existingPdfs));
     }
 
     try {
@@ -109,8 +137,12 @@ export default function AdminDashboard() {
       tags: project.tags?.join(', ') || '',
       year: project.year || new Date().getFullYear().toString(),
       order: project.order || 0,
+      youtubeUrl: project.youtubeLink?.url || '',
+      youtubeTitle: project.youtubeLink?.title || '',
+      prototypeEmbed: project.prototypeEmbed || '',
     });
     setExistingImages(project.images || []);
+    setExistingPdfs(project.pdfs || []);
     setEditing(project._id);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -132,6 +164,16 @@ export default function AdminDashboard() {
     localStorage.removeItem('admin_token');
     navigate('/admin');
   };
+
+  // ──── Section label style helper ────
+  const sectionLabel = (text) => (
+    <div className="flex items-center gap-3 mt-2">
+      <span className="text-xs font-bold text-charcoal/50 uppercase tracking-widest whitespace-nowrap">
+        {text}
+      </span>
+      <div className="h-px flex-1 bg-gray-light" />
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-off-white">
@@ -245,7 +287,7 @@ export default function AdminDashboard() {
               className="px-4 py-3 rounded-xl border border-gray-light bg-off-white text-charcoal text-sm focus:outline-none focus:ring-2 focus:ring-amber"
             />
 
-            {/* Image upload */}
+            {/* ──── Image upload ──── */}
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-charcoal">Add Images</label>
               <input
@@ -308,6 +350,118 @@ export default function AdminDashboard() {
               </div>
             )}
 
+            {/* ──── PDF upload ──── */}
+            {sectionLabel('PDF Attachments')}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-charcoal">Add PDFs</label>
+              <input
+                type="file"
+                accept=".pdf,application/pdf"
+                multiple
+                onChange={(e) => setPdfFiles((prev) => [...prev, ...Array.from(e.target.files)])}
+                className="text-sm text-charcoal file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-charcoal file:text-cream hover:file:bg-amber hover:file:text-charcoal file:transition-colors file:cursor-pointer"
+              />
+              <p className="text-xs text-gray-warm">Upload PDF documents to attach to this project.</p>
+            </div>
+
+            {/* Existing PDFs when editing */}
+            {editing && existingPdfs.length > 0 && (
+              <div>
+                <label className="text-sm text-gray-warm mb-2 block">Current PDFs (click × to remove):</label>
+                <div className="flex flex-col gap-2">
+                  {existingPdfs.map((pdf, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 bg-off-white rounded-lg px-4 py-2 border border-gray-light group"
+                    >
+                      <svg className="w-5 h-5 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
+                      </svg>
+                      <span className="text-sm text-charcoal truncate flex-1">
+                        {pdf.originalName}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setExistingPdfs(existingPdfs.filter((_, j) => j !== i))}
+                        className="w-6 h-6 bg-red-500 text-white rounded-full text-xs font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* New PDF previews */}
+            {pdfFiles.length > 0 && (
+              <div>
+                <label className="text-sm text-gray-warm mb-2 block">New PDFs to upload:</label>
+                <div className="flex flex-col gap-2">
+                  {pdfFiles.map((file, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 bg-off-white rounded-lg px-4 py-2 border border-amber group"
+                    >
+                      <svg className="w-5 h-5 text-amber shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z" />
+                      </svg>
+                      <span className="text-sm text-charcoal truncate flex-1">{file.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setPdfFiles(pdfFiles.filter((_, j) => j !== i))}
+                        className="w-6 h-6 bg-red-500 text-white rounded-full text-xs font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ──── YouTube Link ──── */}
+            {sectionLabel('YouTube Video')}
+            <div className="grid md:grid-cols-2 gap-4">
+              <input
+                type="url"
+                placeholder="YouTube URL (e.g. https://youtube.com/watch?v=...)"
+                value={form.youtubeUrl}
+                onChange={(e) => setForm({ ...form, youtubeUrl: e.target.value })}
+                className="px-4 py-3 rounded-xl border border-gray-light bg-off-white text-charcoal text-sm focus:outline-none focus:ring-2 focus:ring-amber"
+              />
+              <input
+                type="text"
+                placeholder="Video Title (e.g. Project Demo)"
+                value={form.youtubeTitle}
+                onChange={(e) => setForm({ ...form, youtubeTitle: e.target.value })}
+                className="px-4 py-3 rounded-xl border border-gray-light bg-off-white text-charcoal text-sm focus:outline-none focus:ring-2 focus:ring-amber"
+              />
+            </div>
+
+            {/* ──── Prototype Embed (UX only) ──── */}
+            {form.tag === 'UX' && (
+              <>
+                {sectionLabel('Prototype Embed')}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-charcoal">
+                    Paste Prototype Embed Code
+                  </label>
+                  <textarea
+                    placeholder='Paste your embed code here (e.g. <iframe src="https://www.figma.com/embed?..." ...></iframe>)'
+                    value={form.prototypeEmbed}
+                    onChange={(e) => setForm({ ...form, prototypeEmbed: e.target.value })}
+                    rows={4}
+                    className="px-4 py-3 rounded-xl border border-gray-light bg-off-white text-charcoal text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber resize-none"
+                  />
+                  <p className="text-xs text-gray-warm">
+                    The embed will appear at the bottom of the project page. Supports Figma, InVision,
+                    Adobe XD, etc.
+                  </p>
+                </div>
+              </>
+            )}
+
             <button
               type="submit"
               className="self-end bg-charcoal text-cream px-8 py-3 rounded-xl text-sm font-medium hover:bg-amber hover:text-charcoal transition-colors"
@@ -351,6 +505,21 @@ export default function AdminDashboard() {
                     >
                       {project.tag}
                     </span>
+                    {project.pdfs?.length > 0 && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-600">
+                        {project.pdfs.length} PDF{project.pdfs.length > 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {project.youtubeLink?.url && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+                        YT
+                      </span>
+                    )}
+                    {project.prototypeEmbed && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                        Prototype
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm text-gray-warm line-clamp-2">{project.description}</p>
                   {project.link && (

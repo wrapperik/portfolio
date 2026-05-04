@@ -9,14 +9,20 @@ const router = express.Router();
 // Multer — memory storage, Cloudinary handles persistence
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB (increased for PDFs)
 });
 
+// Accept both images and pdfs in a single request
+const uploadFields = upload.fields([
+  { name: 'images', maxCount: 10 },
+  { name: 'pdfFiles', maxCount: 10 },
+]);
+
 // Helper: upload a buffer to Cloudinary and return the secure URL
-const uploadToCloudinary = (buffer, mimetype) =>
+const uploadToCloudinary = (buffer, resourceType = 'image') =>
   new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder: 'portfolio', resource_type: 'image' },
+      { folder: 'portfolio', resource_type: resourceType },
       (err, result) => {
         if (err) return reject(err);
         resolve(result.secure_url);
@@ -53,18 +59,44 @@ router.get('/:id', async (req, res) => {
 // ──── ADMIN-ONLY ROUTES ────
 
 // POST /api/projects — create project
-router.post('/', auth, upload.array('images', 10), async (req, res) => {
+router.post('/', auth, uploadFields, async (req, res) => {
   try {
     const data = { ...req.body };
-    if (req.files && req.files.length > 0) {
+
+    // Handle image uploads
+    const imageFiles = req.files?.images || [];
+    if (imageFiles.length > 0) {
       data.images = await Promise.all(
-        req.files.map((f) => uploadToCloudinary(f.buffer, f.mimetype))
+        imageFiles.map((f) => uploadToCloudinary(f.buffer, 'image'))
       );
     }
+
+    // Handle PDF uploads
+    const pdfFiles = req.files?.pdfFiles || [];
+    if (pdfFiles.length > 0) {
+      const pdfUrls = await Promise.all(
+        pdfFiles.map((f) => uploadToCloudinary(f.buffer, 'raw'))
+      );
+      data.pdfs = pdfFiles.map((f, i) => ({
+        url: pdfUrls[i],
+        originalName: f.originalname,
+      }));
+    }
+
     // Parse tags if sent as comma-separated string
     if (typeof data.tags === 'string') {
       data.tags = data.tags.split(',').map((t) => t.trim()).filter(Boolean);
     }
+
+    // Handle YouTube link (sent as JSON string from FormData)
+    if (data.youtubeLink && typeof data.youtubeLink === 'string') {
+      try {
+        data.youtubeLink = JSON.parse(data.youtubeLink);
+      } catch {
+        data.youtubeLink = { url: '', title: '' };
+      }
+    }
+
     const project = await Project.create(data);
     res.status(201).json(project);
   } catch (err) {
@@ -73,24 +105,58 @@ router.post('/', auth, upload.array('images', 10), async (req, res) => {
 });
 
 // PUT /api/projects/:id — update project
-router.put('/:id', auth, upload.array('images', 10), async (req, res) => {
+router.put('/:id', auth, uploadFields, async (req, res) => {
   try {
     const data = { ...req.body };
-    if (req.files && req.files.length > 0) {
+
+    // Handle image uploads
+    const imageFiles = req.files?.images || [];
+    if (imageFiles.length > 0) {
       const kept = data.existingImages
         ? (typeof data.existingImages === 'string' ? JSON.parse(data.existingImages) : data.existingImages)
         : [];
       const newUrls = await Promise.all(
-        req.files.map((f) => uploadToCloudinary(f.buffer, f.mimetype))
+        imageFiles.map((f) => uploadToCloudinary(f.buffer, 'image'))
       );
       data.images = [...kept, ...newUrls]; // Cloudinary secure URL
     } else if (data.existingImages) {
       data.images = typeof data.existingImages === 'string' ? JSON.parse(data.existingImages) : data.existingImages;
     }
     delete data.existingImages;
+
+    // Handle PDF uploads
+    const pdfFiles = req.files?.pdfFiles || [];
+    const existingPdfs = data.existingPdfs
+      ? (typeof data.existingPdfs === 'string' ? JSON.parse(data.existingPdfs) : data.existingPdfs)
+      : [];
+    if (pdfFiles.length > 0) {
+      const pdfUrls = await Promise.all(
+        pdfFiles.map((f) => uploadToCloudinary(f.buffer, 'raw'))
+      );
+      const newPdfs = pdfFiles.map((f, i) => ({
+        url: pdfUrls[i],
+        originalName: f.originalname,
+      }));
+      data.pdfs = [...existingPdfs, ...newPdfs];
+    } else {
+      data.pdfs = existingPdfs;
+    }
+    delete data.existingPdfs;
+
+    // Parse tags if sent as comma-separated string
     if (typeof data.tags === 'string') {
       data.tags = data.tags.split(',').map((t) => t.trim()).filter(Boolean);
     }
+
+    // Handle YouTube link (sent as JSON string from FormData)
+    if (data.youtubeLink && typeof data.youtubeLink === 'string') {
+      try {
+        data.youtubeLink = JSON.parse(data.youtubeLink);
+      } catch {
+        data.youtubeLink = { url: '', title: '' };
+      }
+    }
+
     const project = await Project.findByIdAndUpdate(req.params.id, data, {
       new: true,
       runValidators: true,
@@ -121,6 +187,23 @@ router.delete('/:id', auth, async (req, res) => {
       if (publicIds.length > 0) {
         cloudinary.api.delete_resources(publicIds).catch((err) =>
           console.warn('Cloudinary cleanup warning:', err.message)
+        );
+      }
+    }
+
+    // Clean up Cloudinary PDFs (best-effort, non-blocking)
+    if (project.pdfs && project.pdfs.length > 0) {
+      const pdfPublicIds = project.pdfs
+        .filter((pdf) => pdf.url && pdf.url.includes('cloudinary.com'))
+        .map((pdf) => {
+          const match = pdf.url.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/);
+          return match ? match[1] : null;
+        })
+        .filter(Boolean);
+
+      if (pdfPublicIds.length > 0) {
+        cloudinary.api.delete_resources(pdfPublicIds, { resource_type: 'raw' }).catch((err) =>
+          console.warn('Cloudinary PDF cleanup warning:', err.message)
         );
       }
     }
