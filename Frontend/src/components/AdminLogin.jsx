@@ -32,7 +32,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-charcoal flex items-center justify-center px-4">
+    <div className="min-h-screen bg-cream flex items-center justify-center px-4">
       <div className="bg-off-white rounded-2xl p-8 w-full max-w-md shadow-xl">
         <h1 className="text-3xl font-black text-charcoal mb-2">
           {isSetup ? 'Create Admin Account' : 'Admin Login'}

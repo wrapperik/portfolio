@@ -211,8 +211,8 @@ export default function ProjectPage() {
                   />
                 </div>
                 {canScroll && !atBottom && (
-                  <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-charcoal/50 to-transparent pointer-events-none flex items-end justify-center pb-3 rounded-b-2xl">
-                    <div className="flex flex-col items-center gap-0.5 text-cream/90">
+                  <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-cream/50 to-transparent pointer-events-none flex items-end justify-center pb-3 rounded-b-2xl">
+                    <div className="flex flex-col items-center gap-0.5 text-charcoal/90">
                       <span className="text-xs font-medium tracking-wide">Scroll to explore</span>
                       <svg className="w-4 h-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
@@ -423,15 +423,15 @@ export default function ProjectPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-charcoal/90 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-[100] bg-cream/90 backdrop-blur-sm flex items-center justify-center p-4"
             onClick={() => setLightbox(false)}
           >
             {/* Close */}
             <button
               onClick={() => setLightbox(false)}
-              className="absolute top-6 right-6 w-10 h-10 bg-cream/10 hover:bg-cream/20 rounded-full flex items-center justify-center transition-colors"
+              className="absolute top-6 right-6 w-10 h-10 bg-charcoal/10 hover:bg-charcoal/20 rounded-full flex items-center justify-center transition-colors"
             >
-              <svg className="w-5 h-5 text-cream" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 text-charcoal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -444,9 +444,9 @@ export default function ProjectPage() {
                     e.stopPropagation();
                     setActiveImg((prev) => (prev === 0 ? images.length - 1 : prev - 1));
                   }}
-                  className="absolute left-4 sm:left-8 w-10 h-10 bg-cream/10 hover:bg-cream/20 rounded-full flex items-center justify-center transition-colors"
+                  className="absolute left-4 sm:left-8 w-10 h-10 bg-charcoal/10 hover:bg-charcoal/20 rounded-full flex items-center justify-center transition-colors"
                 >
-                  <svg className="w-5 h-5 text-cream" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5 text-charcoal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
@@ -455,9 +455,9 @@ export default function ProjectPage() {
                     e.stopPropagation();
                     setActiveImg((prev) => (prev === images.length - 1 ? 0 : prev + 1));
                   }}
-                  className="absolute right-4 sm:right-8 w-10 h-10 bg-cream/10 hover:bg-cream/20 rounded-full flex items-center justify-center transition-colors"
+                  className="absolute right-4 sm:right-8 w-10 h-10 bg-charcoal/10 hover:bg-charcoal/20 rounded-full flex items-center justify-center transition-colors"
                 >
-                  <svg className="w-5 h-5 text-cream" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5 text-charcoal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -491,7 +491,7 @@ export default function ProjectPage() {
                       setActiveImg(i);
                     }}
                     className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                      i === activeImg ? 'bg-cream' : 'bg-cream/30'
+                      i === activeImg ? 'bg-charcoal' : 'bg-charcoal/30'
                     }`}
                   />
                 ))}

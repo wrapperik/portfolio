@@ -61,6 +61,14 @@ const tools = [
   'Miro', 'Notion', 'Node.js', 'Framer', 'Notion',
 ];
 
+// Honest, qualitative proficiency tiers — clearer than arbitrary percentages
+const proficiency = (level) =>
+  level >= 85
+    ? { label: 'Advanced', className: 'text-amber' }
+    : level >= 75
+    ? { label: 'Proficient', className: 'text-charcoal/55' }
+    : { label: 'Familiar', className: 'text-charcoal/35' };
+
 export default function Skills() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
@@ -102,33 +110,38 @@ export default function Skills() {
               initial="hidden"
               animate={isInView ? 'visible' : 'hidden'}
               custom={catIndex + 2}
-              className="bg-white rounded-2xl p-8 border border-gray-light hover:border-amber/30 transition-colors duration-500"
+              className="bg-off-white rounded-2xl p-8 border border-gray-light hover:border-amber/30 transition-colors duration-500"
             >
-              <div className="flex items-center gap-3 mb-8">
+              <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-amber/10 rounded-xl flex items-center justify-center text-amber">
                   {category.icon}
                 </div>
                 <h3 className="text-lg font-bold text-charcoal">{category.title}</h3>
               </div>
 
-              <div className="flex flex-col gap-5">
-                {category.skills.map((skill) => (
-                  <div key={skill.name}>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium text-charcoal">{skill.name}</span>
-                      <span className="text-xs text-gray-warm">{skill.level}%</span>
-                    </div>
-                    <div className="h-1.5 bg-gray-light rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={isInView ? { width: `${skill.level}%` } : { width: 0 }}
-                        transition={{ duration: 1.2, delay: catIndex * 0.2 + 0.5, ease: [0.22, 1, 0.36, 1] }}
-                        className="h-full bg-gradient-to-r from-orange to-amber-light rounded-full"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <ul className="flex flex-col">
+                {category.skills.map((skill, skillIndex) => {
+                  const tier = proficiency(skill.level);
+                  return (
+                    <motion.li
+                      key={skill.name}
+                      variants={fadeUp}
+                      initial="hidden"
+                      animate={isInView ? 'visible' : 'hidden'}
+                      custom={catIndex * 0.5 + skillIndex * 0.15 + 2}
+                      className="flex items-center justify-between gap-4 py-3.5 border-b border-gray-light/70 last:border-0"
+                    >
+                      <span className="flex items-center gap-3 text-sm font-medium text-charcoal">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber shrink-0" />
+                        {skill.name}
+                      </span>
+                      <span className={`text-[11px] font-semibold uppercase tracking-wider shrink-0 ${tier.className}`}>
+                        {tier.label}
+                      </span>
+                    </motion.li>
+                  );
+                })}
+              </ul>
             </motion.div>
           ))}
         </div>

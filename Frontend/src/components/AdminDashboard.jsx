@@ -178,15 +178,15 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-off-white">
       {/* Header */}
-      <header className="bg-charcoal text-cream px-8 py-4 flex items-center justify-between sticky top-0 z-50">
+      <header className="bg-cream text-charcoal px-8 py-4 flex items-center justify-between sticky top-0 z-50">
         <h1 className="text-lg font-bold">Portfolio Admin</h1>
         <div className="flex gap-3">
-          <a href="/" className="text-sm text-cream/70 hover:text-amber transition-colors">
+          <a href="/" className="text-sm text-charcoal/70 hover:text-amber transition-colors">
             View Site
           </a>
           <button
             onClick={handleLogout}
-            className="text-sm text-cream/70 hover:text-amber transition-colors"
+            className="text-sm text-charcoal/70 hover:text-amber transition-colors"
           >
             Logout
           </button>

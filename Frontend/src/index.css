@@ -1,14 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-cream: #FAF8F4;
-  --color-charcoal: #1A1A1A;
+  /* Dark mode: these tokens are repurposed (literal names no longer match their values) */
+  --color-cream: #121212;      /* was #FAF8F4 — now the dark page background */
+  --color-charcoal: #F2EFE9;   /* was #1A1A1A — now primary light text/"ink" */
   --color-amber: #E5A100;
   --color-amber-light: #F5C542;
   --color-amber-dark: #CC8E00;
-  --color-gray-warm: #6B6B6B;
-  --color-gray-light: #E8E6E2;
-  --color-off-white: #F5F3EF;
+  --color-gray-warm: #9A9A9A;  /* was #6B6B6B — muted text, lightened for dark bg */
+  --color-gray-light: #2C2C2C; /* was #E8E6E2 — borders/dividers on dark */
+  --color-off-white: #1C1C1C;  /* was #F5F3EF — now a raised dark surface */
 
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-serif: 'Playfair Display', Georgia, serif;
