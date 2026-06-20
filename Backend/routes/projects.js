@@ -33,12 +33,23 @@ const uploadToCloudinary = (buffer, resourceType = 'image') =>
 
 // ──── PUBLIC ROUTES ────
 
-// GET /api/projects — list all projects (public)
+// GET /api/projects — list visible projects (public)
 router.get('/', async (req, res) => {
   try {
     const { tag } = req.query; // optional filter: ?tag=DV or ?tag=UX
-    const filter = tag ? { tag: tag.toUpperCase() } : {};
+    const filter = { hidden: { $ne: true } }; // never expose hidden projects publicly
+    if (tag) filter.tag = tag.toUpperCase();
     const projects = await Project.find(filter).sort({ order: 1, createdAt: -1 });
+    res.json(projects);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/projects/admin/all — list ALL projects incl. hidden (admin only)
+router.get('/admin/all', auth, async (req, res) => {
+  try {
+    const projects = await Project.find().sort({ order: 1, createdAt: -1 });
     res.json(projects);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -158,6 +169,22 @@ router.put('/:id', auth, uploadFields, async (req, res) => {
     }
 
     const project = await Project.findByIdAndUpdate(req.params.id, data, {
+      new: true,
+      runValidators: true,
+    });
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    res.json(project);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// PATCH /api/projects/:id — lightweight field update (e.g. toggle visibility)
+router.patch('/:id', auth, async (req, res) => {
+  try {
+    const update = {};
+    if (typeof req.body.hidden !== 'undefined') update.hidden = !!req.body.hidden;
+    const project = await Project.findByIdAndUpdate(req.params.id, update, {
       new: true,
       runValidators: true,
     });

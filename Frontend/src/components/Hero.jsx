@@ -1,4 +1,8 @@
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+
+// Heavy three.js background — load on its own chunk so it never blocks the hero
+const Beams = lazy(() => import('./Beams'));
 
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
@@ -15,8 +19,45 @@ const stats = [
 ];
 
 export default function Hero() {
+  // Defer the heavy three.js background until the browser is idle, so it loads
+  // last and never blocks the hero's first paint or interactivity.
+  const [showBeams, setShowBeams] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(() => setShowBeams(true), { timeout: 2500 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const t = setTimeout(() => setShowBeams(true), 1500);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
-    <section id="home" className="relative min-h-screen flex items-center pt-24 pb-20">
+    <section id="home" className="relative min-h-screen flex items-center pt-24 pb-20 overflow-hidden">
+      {/* Animated beams background — full viewport width, behind everything */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full z-0 pointer-events-none bg-black" aria-hidden="true">
+        {showBeams && (
+          <Suspense fallback={null}>
+            <Beams
+              beamWidth={2}
+              beamHeight={15}
+              beamNumber={12}
+              lightColor="#ffffff"
+              speed={2}
+              noiseIntensity={1.75}
+              scale={0.2}
+              rotation={30}
+            />
+          </Suspense>
+        )}
+      </div>
+
+      {/* Dark radial glow to keep the hero content legible over the beams */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-screen h-full z-[1] pointer-events-none bg-[radial-gradient(circle_at_35%_45%,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.6)_30%,transparent_62%)]"
+        aria-hidden="true"
+      />
+
       <div className="w-full max-w-7xl mx-auto px-8 sm:px-12 lg:px-16 relative z-10">
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           {/* Left - 5 columns */}

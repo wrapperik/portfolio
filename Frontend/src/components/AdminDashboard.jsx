@@ -46,12 +46,23 @@ export default function AdminDashboard() {
   const loadProjects = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/projects');
+      const { data } = await api.get('/projects/admin/all');
       setProjects(data);
     } catch (err) {
       setError('Failed to load projects');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleHidden = async (project) => {
+    try {
+      await api.patch(`/projects/${project._id}`, { hidden: !project.hidden });
+      setSuccess(project.hidden ? 'Project is now visible' : 'Project hidden from site');
+      await loadProjects();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError('Failed to update visibility');
     }
   };
 
@@ -534,7 +545,9 @@ export default function AdminDashboard() {
             {projects.map((project) => (
               <div
                 key={project._id}
-                className="bg-cream rounded-xl p-5 border border-gray-light flex flex-col md:flex-row md:items-center gap-4"
+                className={`bg-cream rounded-xl p-5 border flex flex-col md:flex-row md:items-center gap-4 transition-opacity ${
+                  project.hidden ? 'opacity-60 border-dashed border-gray-light' : 'border-gray-light'
+                }`}
               >
                 {project.images?.length > 0 && (
                   <img
@@ -570,6 +583,11 @@ export default function AdminDashboard() {
                         Behance
                       </span>
                     )}
+                    {project.hidden && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-light text-charcoal/60">
+                        Hidden
+                      </span>
+                    )}
                     {project.prototypeEmbed && (
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
                         Prototype
@@ -589,6 +607,12 @@ export default function AdminDashboard() {
                   )}
                 </div>
                 <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={() => toggleHidden(project)}
+                    className="text-sm px-4 py-2 rounded-lg bg-off-white border border-gray-light text-charcoal hover:bg-amber hover:text-charcoal hover:border-amber transition-colors"
+                  >
+                    {project.hidden ? 'Show' : 'Hide'}
+                  </button>
                   <button
                     onClick={() => handleEdit(project)}
                     className="text-sm px-4 py-2 rounded-lg bg-off-white border border-gray-light text-charcoal hover:bg-amber hover:text-charcoal hover:border-amber transition-colors"
