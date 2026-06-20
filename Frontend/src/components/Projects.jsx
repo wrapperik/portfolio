@@ -73,21 +73,49 @@ const fallbackProjects = [
 const filters = ['All', 'UX', 'DV'];
 const filterLabels = { All: 'All', UX: 'UX Design', DV: 'Development' };
 
+// Neutral placeholder shown while projects load — never flashes the amber tile
+const SkeletonCard = () => (
+  <div className="animate-pulse">
+    <div className="aspect-[4/3] rounded-2xl bg-gray-light mb-6" />
+    <div className="flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-4">
+        <div className="h-6 w-2/3 rounded-full bg-gray-light" />
+        <div className="h-6 w-20 rounded-full bg-gray-light shrink-0" />
+      </div>
+      <div className="h-4 w-full rounded-full bg-gray-light" />
+      <div className="h-4 w-5/6 rounded-full bg-gray-light" />
+      <div className="flex gap-2 mt-1">
+        <div className="h-6 w-16 rounded-full bg-gray-light" />
+        <div className="h-6 w-16 rounded-full bg-gray-light" />
+      </div>
+    </div>
+  </div>
+);
+
 export default function Projects() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
   const [activeFilter, setActiveFilter] = useState('All');
-  const [projects, setProjects] = useState(fallbackProjects);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
     api
       .get('/projects')
       .then(({ data }) => {
-        if (data.length > 0) setProjects(data);
+        if (active) setProjects(data.length > 0 ? data : fallbackProjects);
       })
       .catch(() => {
-        // API unavailable — keep fallback projects
+        // API unavailable — fall back to sample projects
+        if (active) setProjects(fallbackProjects);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
       });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const filtered =
@@ -150,7 +178,10 @@ export default function Projects() {
 
         {/* Projects Grid */}
         <div className="grid md:grid-cols-2 gap-8">
-          {filtered.map((project, i) => {
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+          ) : (
+            filtered.map((project, i) => {
             const color = project.tag === 'UX' ? 'bg-amber' : 'bg-charcoal';
             const categoryLabel = project.tag === 'UX' ? 'UX Design' : 'Development';
             const projectIndex = projects.indexOf(project) + 1;
@@ -171,7 +202,7 @@ export default function Projects() {
                 <Link to={`/project/${project._id}`}>
                   {/* Thumbnail */}
                   <div
-                    className={`aspect-[4/3] ${color} rounded-2xl overflow-hidden relative mb-6 transition-transform duration-500 group-hover:scale-[0.98]`}
+                    className={`aspect-[4/3] ${thumbnail ? 'bg-gray-light' : color} rounded-2xl overflow-hidden relative mb-6 transition-transform duration-500 group-hover:scale-[0.98]`}
                   >
                     {thumbnail ? (
                       <img
@@ -258,7 +289,8 @@ export default function Projects() {
             );
 
             return card;
-          })}
+            })
+          )}
         </div>
       </div>
     </section>

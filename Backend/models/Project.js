@@ -24,6 +24,10 @@ const projectSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    behanceLink: {
+      type: String,
+      default: '',
+    },
     tags: {
       type: [String],
       default: [],

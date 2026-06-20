@@ -14,6 +14,7 @@ export default function AdminDashboard() {
     rationale: '',
     tag: 'DV',
     link: '',
+    behanceLink: '',
     tags: '',
     year: new Date().getFullYear().toString(),
     order: 0,
@@ -61,6 +62,7 @@ export default function AdminDashboard() {
       rationale: '',
       tag: 'DV',
       link: '',
+      behanceLink: '',
       tags: '',
       year: new Date().getFullYear().toString(),
       order: 0,
@@ -134,6 +136,7 @@ export default function AdminDashboard() {
       rationale: project.rationale || '',
       tag: project.tag,
       link: project.link || '',
+      behanceLink: project.behanceLink || '',
       tags: project.tags?.join(', ') || '',
       year: project.year || new Date().getFullYear().toString(),
       order: project.order || 0,
@@ -163,6 +166,17 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
     navigate('/admin');
+  };
+
+  // Reorder existing images — the array order is the display order on the project page
+  const moveImage = (from, to) => {
+    setExistingImages((prev) => {
+      if (to < 0 || to >= prev.length) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
   };
 
   // ──── Section label style helper ────
@@ -280,6 +294,14 @@ export default function AdminDashboard() {
             </div>
 
             <input
+              type="url"
+              placeholder="Behance project URL (optional) — adds a 'View on Behance' button"
+              value={form.behanceLink}
+              onChange={(e) => setForm({ ...form, behanceLink: e.target.value })}
+              className="px-4 py-3 rounded-xl border border-gray-light bg-off-white text-charcoal text-sm focus:outline-none focus:ring-2 focus:ring-amber"
+            />
+
+            <input
               type="text"
               placeholder="Year"
               value={form.year}
@@ -303,7 +325,9 @@ export default function AdminDashboard() {
             {/* Existing images when editing */}
             {editing && existingImages.length > 0 && (
               <div>
-                <label className="text-sm text-gray-warm mb-2 block">Current images (click to remove):</label>
+                <label className="text-sm text-gray-warm mb-2 block">
+                  Current images — use the arrows to reorder. The first image is the cover.
+                </label>
                 <div className="flex flex-wrap gap-3">
                   {existingImages.map((img, i) => (
                     <div key={i} className="relative group">
@@ -312,6 +336,11 @@ export default function AdminDashboard() {
                         alt=""
                         className="w-24 h-24 object-cover rounded-lg border border-gray-light"
                       />
+                      {i === 0 && (
+                        <span className="absolute top-1 left-1 bg-amber text-charcoal text-[10px] font-bold px-1.5 py-0.5 rounded">
+                          Cover
+                        </span>
+                      )}
                       <button
                         type="button"
                         onClick={() => setExistingImages(existingImages.filter((_, j) => j !== i))}
@@ -319,6 +348,27 @@ export default function AdminDashboard() {
                       >
                         &times;
                       </button>
+                      {/* Reorder controls */}
+                      <div className="absolute inset-x-0 bottom-0 flex justify-between p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          type="button"
+                          onClick={() => moveImage(i, i - 1)}
+                          disabled={i === 0}
+                          aria-label="Move image left"
+                          className="w-6 h-6 rounded-full bg-black/60 text-white text-sm flex items-center justify-center hover:bg-black disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          &lsaquo;
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveImage(i, i + 1)}
+                          disabled={i === existingImages.length - 1}
+                          aria-label="Move image right"
+                          className="w-6 h-6 rounded-full bg-black/60 text-white text-sm flex items-center justify-center hover:bg-black disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          &rsaquo;
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -513,6 +563,11 @@ export default function AdminDashboard() {
                     {project.youtubeLink?.url && (
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700">
                         YT
+                      </span>
+                    )}
+                    {project.behanceLink && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                        Behance
                       </span>
                     )}
                     {project.prototypeEmbed && (
